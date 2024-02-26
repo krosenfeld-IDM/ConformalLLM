@@ -49,3 +49,36 @@ def modify_task_data(task_data, token_limit, max_size_prompt_len):
                 new_task_data[split]['D'].append(d)
                 new_task_data[split]['target'].append(target)
     return new_task_data
+
+
+def get_prompt(task_data, task, question_num=0, prompt_q=None):
+    '''
+    task_data:
+    Question num specifies which question will be used as prompt.
+    If prompt_q is provided, it is used as 1-shot prompt question. This
+    corresponds to GPT-4 based question prompts that we created. Else, we
+    select question corresponding to question_num from the MMLU itself to
+    generate the prompt. We select prompt from test set in this case,
+    since train set is very small sometime and may not have 10 samples.
+    We use 10 different prompts and take avergae over them to estimate
+    performance on a subject. The function returns the 1-shot question prompt.
+    '''
+
+    if prompt_q is None:
+        prompt_set = 'test'
+        if question_num > len(task_data['test']['input']) - 1:
+            print('prompt question id exceeds the length of test set')
+            print('selecting last question of the test set')
+            question_num = len(task_data['test']['input']) - 1
+        prompt_add = f'This is a question from {task.replace("_", " ")}.\n'
+        prompt_add += f"{task_data[prompt_set]['input'][question_num]}\n"
+        for letter in ['A', 'B', 'C', 'D']:
+            prompt_add += '    ' + letter + '. ' + task_data[prompt_set][letter][question_num] + '\n'
+        prompt_add += f"The correct answer is option: {task_data[prompt_set]['target'][question_num]}\n"
+    else:
+        prompt_add = f'This is a question from {task.replace("_", " ")}.'
+        prompt_add += prompt_q
+        prompt_add += '\n'
+    prompt_add += f"You are the world's best expert in {task.replace('_', ' ')}. "
+    prompt_add += '''Reason step-by-step and answer the following question. '''
+    return prompt_add
