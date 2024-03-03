@@ -10,6 +10,8 @@ from datasets import load_dataset
 from collections import defaultdict
 import pickle
 
+USE_GPU = False
+
 # List of task we consider
 task_list = ['college_computer_science', 'formal_logic', 'high_school_computer_science',
              'computer_security', 'machine_learning',
@@ -200,7 +202,10 @@ def to_tokens_and_logprobs(model, tokenizer, input_texts):
     all_outputs = []
     all_input_ids = []
     for text in input_texts:
-        input_ids = tokenizer(text, padding=True, return_tensors="pt").input_ids
+        if USE_GPU:
+            input_ids = tokenizer(text, padding=True, return_tensors="pt").input_ids.to("cuda")
+        else:
+            input_ids = tokenizer(text, padding=True, return_tensors="pt").input_ids
         outputs = model(input_ids)
         logits = outputs.logits.detach().cpu()
         all_outputs.append(logits)
@@ -337,21 +342,23 @@ for subject_name in task_list:
     max_size_prompt_len_dict[subject_name] = max_len
     prompt_question_ids_dict[subject_name] = prompt_question_ids
 
-print('Initializing tokenizer and model')
 access_token = os.getenv("HUGGINGFACE_API_KEY")
 tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b", token=access_token)
-model = AutoModelForCausalLM.from_pretrained("google/gemma-2b", token=access_token)
+model = AutoModelForCausalLM.from_pretrained("google/gemma-2b", token=access_token, 
+                                             device_map='auto', torch_dtype=torch.float16)
 tokenizer.pad_token = tokenizer.eos_token
 model.config.pad_token_id = model.config.eos_token_id
-# model.half().cuda()
-print('done')
+# if USE_GPU:
+#     model.half().gpu() # half-precision
+# else:
+#     model.half() # half-precision
+
 
 # Get prediction for subjects with MMLU based prompts
 
 acc_dicts = {}
 
 for subject_name in task_list:
-    print("loadng dataset")
     task_data = load_dataset('lukaemon/mmlu', subject_name)
     new_task_data = modify_task_data(task_data, token_limit, max_size_prompt_len_dict[subject_name])
 
@@ -367,7 +374,7 @@ for subject_name in task_list:
         questions, answers = get_question_dict(new_task_data, prompt_q_id=question_num, prompt_add=prompt_add)
         for i, (question, answer) in enumerate(zip(questions, answers)):
             batch = to_tokens_and_logprobs(model, tokenizer, [v for v in question.values()])
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
             preds.append(extract_answer(batch))
             targets.append(answer)
         print(f'Predictions Generated for {subject_name} for iteration {j}')
