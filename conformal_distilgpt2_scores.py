@@ -44,6 +44,8 @@ for subject_name in task_list:
 
 tokenizer = AutoTokenizer.from_pretrained("distilbert/distilgpt2")
 model = AutoModelForCausalLM.from_pretrained("distilbert/distilgpt2", device_map='auto')
+tokenizer.pad_token = tokenizer.eos_token
+model.config.pad_token_id = model.config.eos_token_id
 
 # Get prediction for subjects with MMLU based prompts
 
