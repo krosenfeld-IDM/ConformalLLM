@@ -353,7 +353,7 @@ def get_predictions_over_n_runs(task_data, prompt_q_list, task, model, tokenizer
         predictions_list.append(predictions)
     return predictions_list, solution_answers, acc_list
 
-def get_prediction_list(subject_name, prompt_list, token_limit=1500):
+def get_prediction_list(subject_name, prompt_list, model, tokenizer, token_limit=1500):
     '''
     Runs the get_predictions_over_n_runs function for a specific subject after removing questions
     that exceed the token limits.
@@ -363,5 +363,5 @@ def get_prediction_list(subject_name, prompt_list, token_limit=1500):
     task_data_modified = modify_task_data(task_data, token_limit=token_limit,
                                           max_size_prompt_len=max_size_prompt)
     prediction_lists, solution_answers, avg_acc = get_predictions_over_n_runs(task_data_modified,
-                                                                     prompt_list, subject_name)
+                                                                     prompt_list, subject_name, model, tokenizer)
     return prediction_lists, solution_answers, avg_acc
