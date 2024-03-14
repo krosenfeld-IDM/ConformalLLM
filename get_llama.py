@@ -1,14 +1,29 @@
-from transformers import GPT2Tokenizer, GPT2Model
-
-# Assuming you have already loaded the model and tokenizer
-# tokenizer = GPT2Tokenizer.from_pretrained('meta-llama/Llama-2-13b-hf', low_cpu_mem_usage=True)
-model = GPT2Model.from_pretrained('meta-llama/Llama-2-13b-hf', low_cpu_mem_usage=True)
+import os
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Specify the directory path where you want to save the model and tokenizer
-directory_path = './Llama-2-13b-hf'
+save_pretrained = True
+org_name = 'meta-llama'; model_name = 'Llama-2-7b-hf'
+# org_name = 'google'; model_name = 'gemma-2b'
+directory_path = os.path.join('.', model_name)
 
-# Save the tokenizer and model
-# tokenizer.save_pretrained(directory_path)
-model.save_pretrained(directory_path)
+def save_model():
+    model = AutoModelForCausalLM.from_pretrained(f"{org_name}/{model_name}",  device_map='auto')
+    if save_pretrained:
+        print('saving model')
+        model.save_pretrained(directory_path)
 
-# This will create the directory (if it doesn't already exist) and save the model and tokenizer there.
+def save_tokenizer():
+    tokenizer = AutoTokenizer.from_pretrained(f"{org_name}/{model_name}", device_map='auto')
+    if save_pretrained:
+        tokenizer.save_pretrained(directory_path)
+
+if  __name__ == "__main__":
+
+    print("saving tokenizer...")
+    save_tokenizer()
+
+    print("saving model...")
+    save_model()
+
+    print("done")
