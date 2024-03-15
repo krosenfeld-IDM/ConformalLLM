@@ -16,5 +16,6 @@ If you would like to run the experiments from scratch, apply for LLaMA [access h
 pip install -r requirements.txt
 ```
 
-## Additions for this fork
-The original repository contained `.pkl` files which have been converted to `.json` by `pickle2json.py`.
+## Fork notes
+- The original repository contained `.pkl` files which have been converted to `.json` by `pickle2json.py`.
+- Hugging face models can fill the `.cache`, keep an eye on that.
