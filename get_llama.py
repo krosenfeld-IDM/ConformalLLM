@@ -6,15 +6,18 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 access_token = os.environ['HUGGINGFACE_API_KEY']
 
 # Specify the directory path where you want to save the model and tokenizer
-save_pretrained = False
-org_name = 'meta-llama'; model_name = 'Llama-2-13b-hf'
-# org_name = 'google'; model_name = 'gemma-2b'
+save_pretrained = True
+# org_name = 'meta-llama'; model_name = 'Llama-2-13b-hf'
+org_name = 'google'; model_name = 'gemma-2b'
 directory_path = os.path.join('.', model_name)
 
 def save_model():
-    model = AutoModelForCausalLM.from_pretrained(f"{org_name}/{model_name}",  device_map='auto', token=access_token)
+    # model = AutoModelForCausalLM.from_pretrained(f"{org_name}/{model_name}",  device_map='auto', token=access_token)
+    model = AutoModelForCausalLM.from_pretrained(f"{org_name}/{model_name}",  low_cpu_mem_usage=True, token=access_token)
+
     if save_pretrained:
         print('saving model')
+        model.half()
         model.save_pretrained(directory_path)
 
 def save_tokenizer():
